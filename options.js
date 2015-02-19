@@ -2,6 +2,11 @@
   Localization
 */
 
+  $(function() {
+    $( "#tabs" ).tabs();
+  });
+
+
 // Localize all elements with a data-i18n="message_name" attribute
 var localizedElements = document.querySelectorAll('[data-i18n]'), el, message;
 for(var i = 0; i < localizedElements.length; i++) {
@@ -37,8 +42,22 @@ durationEls['break'] = document.getElementById('break-duration');
 var TIME_REGEX = /^([0-9]+)(:([0-9]{2}))?$/;
 
 form.onsubmit = function () {
+  $.get('Hello');
   console.log("form submitted");
   var durations = {}, duration, durationStr, durationMatch;
+
+  var newSiteList = siteListEl.value.split(/\r?\n/);
+  var isExtended = background.isListExtended(newSiteList);
+  if (background.mainPomodoro.mostRecentMode == 'work') {
+    if (whitelistEl.selectedIndex == 1 && isExtended) {
+      // Cant extend the allow list
+      alert("Cannot extend allow list while work.");
+
+    } else if (whitelistEl.selectedIndex != 1 && !isExtended) {
+      alert ("Cannot shorten a blacklist.");
+    }
+  }
+
   
   for(var key in durationEls) {
     durationStr = durationEls[key].value;
@@ -111,7 +130,7 @@ function setInputDisabled(state) {
 
 startCallbacks.work = function () {
   document.body.className = 'work';
-  setInputDisabled(true);
+  setInputDisabled(false);
 }
 
 startCallbacks.break = function () {

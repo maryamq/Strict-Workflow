@@ -87,6 +87,14 @@ function setPrefs(prefs) {
   return prefs;
 }
 
+function isListExtended(siteList) {
+  var prefs = loadPrefs();
+  if (siteList.length > prefs.siteList.length) {
+    return true;
+  } 
+  return false;
+}
+
 function loadRingIfNecessary() {
   console.log('is ring necessary?');
   if(PREFS.shouldRing && !ringLoaded) {
