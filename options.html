@@ -105,11 +105,12 @@
     <ul>
       <li><a href="#tabs-1">Blacklist</a></li>
       <li><a href="#tabs-2">Whitelist</a></li>
-      <li><a href="#tabs-3">Settings</a></li>
+      <li><a href="#tabs-3">General</a></li>
+      <li><a href="#tabs-4">Time Blocks</a></li>
     </ul>
     <form id="options-form">
       <div id="tabs-1">
-       
+
         <div id="site-list-wrapper">
           <header id="site-list-header">
             <select id="blacklist-or-whitelist">
@@ -124,7 +125,6 @@
         </div>
       </div>
       <div id="tabs-2">
-
         <div id="site-list-wrapper">
           <header id="site-list-header">
             <select id="blacklist-or-whitelist">
@@ -137,8 +137,6 @@
           <p class="note" data-i18n="options_site_list_info"></p>
           <p class="note" data-i18n="options_site_list_syntax"></p>
         </div>
-        
-        
       </div>
       <div id="tabs-3">
        <div id="durations">
@@ -156,7 +154,9 @@
       </div>
       <div>
         <input id="make_continuous" type="checkbox" />
-        <label for="make_continuous" data-i18n="options_show_notifications"></label>
+        <label for="make_continuous"> Enable Continuous mode </label>
+        <p class="note">Continuous mode allows pomodoro to cycle through work-break automatically.
+         You can request to stop the continuous cycle anytime and the pomodoro will terminate after the current work cycle</p>
       </div>
       <div>
         <input id="show-notifications" type="checkbox" />
@@ -167,12 +167,41 @@
         <label for="should-ring" data-i18n="options_should_ring"></label>
       </div>
       <div>
-        <input id="click-restarts" type="checkbox" />
-        <label for="click-restarts">
-          <span data-i18n="options_click_restarts"></span>
-          <p class="note" data-i18n="options_click_restarts_note"></p>
+        <input id="click-pause" type="checkbox" />
+        <label for="click-pause">
+          <span>Allow Pause when the timer is running</span>
         </label>
       </div>
+    </div>
+    <div id="tabs-4">
+      <span> Time blocks allow you to cycle through pomodors for a set period of time. </span>
+      <p class="note">You can pick your preferred length of blocks for the modes below.
+        TIP: Timeblocks are great if you want to block a certain block of time to focus on a particular task. During a timeblock session, 
+        pomodoro will continue to cycle through work and rest phases. To keep you discipled, there is no way to stop time block.</p>
+      <div id="timeblock_small">
+        <label for="mins_timeblock_small">
+          <span data-i18n-caps>Blue Mode</span>:
+        </label>
+        <input id="work-duration" type="text" size="3" value="60"/>
+        <span class="minutes"> Pomodoros</span>
+      </div>
+
+      <div id="timeblock_medium">
+        <label for="mins_timeblock_medium">
+          <span data-i18n-caps>Red Mode</span>:
+        </label>
+        <input id="work-duration" type="text" size="3" value="120"/>
+        <span class="minutes"> Pomodoros</span>
+      </div>
+
+      <div id="timeblock_large">
+        <label for="mins_timeblock_large">
+          <span data-i18n-caps>Black Mode</span>:
+        </label>
+        <input id="work-duration" type="text" size="3" value="240"/>
+        <span class="minutes"> Pomodoros</span>
+      </div>
+        
     </div>
     <button type="submit" id="save-button" data-i18n="options_save_changes"></button>
     <span id="save-successful" data-i18n="options_save_successful"></span>
@@ -183,10 +212,10 @@
 
   <script type="text/javascript" src="jquery-2.1.3.min.js"></script>
   <script type="text/javascript" src="jquery-ui-1.11.3.custom/jquery-ui.min.js"></script>
-  
+
   <script type="text/javascript" src="options.js"></script>
-  
-  
+
+
 
 </body>
 </html>
