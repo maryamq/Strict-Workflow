@@ -15,9 +15,8 @@ loadRingIfNecessary();
 
 function defaultPrefs() {
   return {
-    siteList: [
+    blacklist: [
       'facebook.com',
-      'youtube.com',
       'twitter.com',
       'tumblr.com',
       'pinterest.com',
@@ -31,13 +30,20 @@ function defaultPrefs() {
       'addictinggames.com',
       'hulu.com'
     ],
+    whitelist: [],
     durations: { // in seconds
-      work: 25 * 60,
-      break: 5 * 60
+      work: 0.5 * 60,
+      break: 0.5 * 60
     },
+    continuous: true,
+    allowPause: false,
     shouldRing: true,
     clickRestarts: false,
-    whitelist: false
+    timeblock: {
+      red: 5,
+      blue: 10,
+      black: 20,
+    },
   }
 }
 
@@ -62,7 +68,7 @@ function updatePrefsFormat(prefs) {
     prefs.siteList = prefs.domainBlacklist;
     delete prefs.domainBlacklist;
     savePrefs(prefs);
-    console.log("Renamed PREFS.domainBlacklist to PREFS.siteList");
+    console.log("Renamed PREFS.domainBlacklist to PREFS.blacklist");
   }
   
   if(!prefs.hasOwnProperty('showNotifications')) {
@@ -132,9 +138,18 @@ function Pomodoro(options) {
   this.mostRecentMode = 'break';
   this.nextMode = 'work';
   this.running = false;
+  //this.continuous = options.isContinuous();
+  this.continuous = true;
+  this.endContinuous = false;
 
   this.onTimerEnd = function (timer) {
     this.running = false;
+
+    // In continuous mode, start the next stage automatically unless
+    // the user requested to end the mode.
+    if (this.continuous && !this.endContinuous) {
+      this.start();
+    }
   }
 
   this.start = function () {
@@ -146,7 +161,9 @@ function Pomodoro(options) {
       timerOptions[key] = options.timer[key];
     }
     timerOptions.type = this.mostRecentMode;
-    timerOptions.duration = options.getDurations()[this.mostRecentMode];
+    //timerOptions.duration = options.getDurations()[this.mostRecentMode];
+    timerOptions.duration = 3;
+    console.log("maryam timer options " + timerOptions.duration);
     this.running = true;
     this.currentTimer = new Pomodoro.Timer(this, timerOptions);
     this.currentTimer.start();
@@ -260,18 +277,24 @@ function domainsMatch(test, against) {
 }
 
 function isLocationBlocked(location) {
-  for(var k in PREFS.siteList) {
-    listedPattern = parseLocation(PREFS.siteList[k]);
+  for(var k in PREFS.blacklist) {
+    listedPattern = parseLocation(PREFS.blacklist[k]);
     if(locationsMatch(location, listedPattern)) {
-      // If we're in a whitelist, a matched location is not blocked => false
-      // If we're in a blacklist, a matched location is blocked => true
-      return !PREFS.whitelist;
+      // Return true if the location is blocked.
+      return true;
+    }
+  }
+
+  // Now check whitelist.
+  for(var k in PREFS.whitelist) {
+    listedPattern = parseLocation(PREFS.whitelist[k]);
+    if(locationsMatch(location, listedPattern)) {
+      // Return false if the location is in whitelist.
+      return false;
     }
   }
   
-  // If we're in a whitelist, an unmatched location is blocked => true
-  // If we're in a blacklist, an unmatched location is not blocked => false
-  return PREFS.whitelist;
+  return false;
 }
 
 function executeInTabIfBlocked(action, tab) {
@@ -298,6 +321,10 @@ function executeInAllBlockedTabs(action) {
 
 var notification, mainPomodoro = new Pomodoro({
   getDurations: function () { return PREFS.durations },
+  isContinuous: function() { return PREFS.continuous },
+  setEndContinuous: function(value) {
+    this.endContinuous = value;
+  },
   timer: {
     onEnd: function (timer) {
       chrome.browserAction.setIcon({
@@ -352,6 +379,9 @@ chrome.browserAction.onClicked.addListener(function (tab) {
   if(mainPomodoro.running) { 
       if(PREFS.clickRestarts) {
           mainPomodoro.restart();
+      }
+      if (mainPomodoro.continuous) {
+        mainPomodoro.endContinuous = true;
       }
   } else {
       mainPomodoro.start();
