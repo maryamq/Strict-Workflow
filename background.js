@@ -1,403 +1,164 @@
-/*
+var  pomodoro =  {};
+pomodoro.prefs = (function() {
 
-  Constants
-
-*/
-
-var PREFS = loadPrefs(),
-BADGE_BACKGROUND_COLORS = {
-  work: [192, 0, 0, 255],
-  break: [0, 192, 0, 255]
-}, RING = new Audio("ring.ogg"),
-ringLoaded = false;
-
-loadRingIfNecessary();
-
-function defaultPrefs() {
-  return {
-    blacklist: [
-      'facebook.com',
-      'twitter.com',
-      'tumblr.com',
-      'pinterest.com',
-      'myspace.com',
-      'livejournal.com',
-      'digg.com',
-      'stumbleupon.com',
-      'reddit.com',
-      'kongregate.com',
-      'newgrounds.com',
-      'addictinggames.com',
-      'hulu.com'
-    ],
-    whitelist: [],
-    durations: { // in seconds
-      work: 0.5 * 60,
-      break: 0.5 * 60
-    },
-    continuous: true,
-    allowPause: false,
-    shouldRing: true,
-    clickRestarts: false,
-    timeblock: {
-      red: 5,
-      blue: 10,
-      black: 20,
-    },
-  }
-}
-
-function loadPrefs() {
-  if(typeof localStorage['prefs'] !== 'undefined') {
-    return updatePrefsFormat(JSON.parse(localStorage['prefs']));
-  } else {
-    return savePrefs(defaultPrefs());
-  }
-}
-
-function updatePrefsFormat(prefs) {
-  // Sometimes we need to change the format of the PREFS module. When just,
-  // say, adding boolean flags with false as the default, there's no
-  // compatibility issue. However, in more complicated situations, we need
-  // to modify an old PREFS module's structure for compatibility.
-  
-  if(prefs.hasOwnProperty('domainBlacklist')) {
-    // Upon adding the whitelist feature, the domainBlacklist property was
-    // renamed to siteList for clarity.
-    
-    prefs.siteList = prefs.domainBlacklist;
-    delete prefs.domainBlacklist;
-    savePrefs(prefs);
-    console.log("Renamed PREFS.domainBlacklist to PREFS.blacklist");
-  }
-  
-  if(!prefs.hasOwnProperty('showNotifications')) {
-    // Upon adding the option to disable notifications, added the
-    // showNotifications property, which defaults to true.
-    prefs.showNotifications = true;
-    savePrefs(prefs);
-    console.log("Added PREFS.showNotifications");
-  }
-  
-  return prefs;
-}
-
-function savePrefs(prefs) {
-  localStorage['prefs'] = JSON.stringify(prefs);
-  return prefs;
-}
-
-function setPrefs(prefs) {
-  PREFS = savePrefs(prefs);
-  loadRingIfNecessary();
-  return prefs;
-}
-
-function isListExtended(siteList) {
-  var prefs = loadPrefs();
-  if (siteList.length > prefs.siteList.length) {
-    return true;
-  } 
-  return false;
-}
-
-function loadRingIfNecessary() {
-  console.log('is ring necessary?');
-  if(PREFS.shouldRing && !ringLoaded) {
-    console.log('ring is necessary');
-    RING.onload = function () {
-      console.log('ring loaded');
-      ringLoaded = true;
-    }
-    RING.load();
-  }
-}
-
-var ICONS = {
-  ACTION: {
-    CURRENT: {},
-    PENDING: {}
-  },
-  FULL: {},
-}, iconTypeS = ['default', 'work', 'break'],
-  iconType;
-for(var i in iconTypeS) {
-  iconType = iconTypeS[i];
-  ICONS.ACTION.CURRENT[iconType] = "icons/" + iconType + ".png";
-  ICONS.ACTION.PENDING[iconType] = "icons/" + iconType + "_pending.png";
-  ICONS.FULL[iconType] = "icons/" + iconType + "_full.png";
-}
-
-/*
-
-  Models
-
-*/
-
-function Pomodoro(options) {
-  this.mostRecentMode = 'break';
-  this.nextMode = 'work';
-  this.running = false;
-  //this.continuous = options.isContinuous();
-  this.continuous = true;
-  this.endContinuous = false;
-
-  this.onTimerEnd = function (timer) {
-    this.running = false;
-
-    // In continuous mode, start the next stage automatically unless
-    // the user requested to end the mode.
-    if (this.continuous && !this.endContinuous) {
-      this.start();
-    }
-  }
-
-  this.start = function () {
-    var mostRecentMode = this.mostRecentMode, timerOptions = {};
-    this.mostRecentMode = this.nextMode;
-    this.nextMode = mostRecentMode;
-
-    for(var key in options.timer) {
-      timerOptions[key] = options.timer[key];
-    }
-    timerOptions.type = this.mostRecentMode;
-    //timerOptions.duration = options.getDurations()[this.mostRecentMode];
-    timerOptions.duration = 3;
-    console.log("maryam timer options " + timerOptions.duration);
-    this.running = true;
-    this.currentTimer = new Pomodoro.Timer(this, timerOptions);
-    this.currentTimer.start();
-  }
-  
-  this.restart = function () {
-      if(this.currentTimer) {
-          this.currentTimer.restart();
-      }
-  }
-}
-
-Pomodoro.Timer = function Timer(pomodoro, options) {
-  var tickInterval, timer = this;
-  this.pomodoro = pomodoro;
-  this.timeRemaining = options.duration;
-  this.type = options.type;
-
-  this.start = function () {
-    tickInterval = setInterval(tick, 1000);
-    options.onStart(timer);
-    options.onTick(timer);
-  }
-  
-  this.restart = function() {
-      this.timeRemaining = options.duration;
-      options.onTick(timer);
-  }
-
-  this.timeRemainingString = function () {
-    if(this.timeRemaining >= 60) {
-      return Math.round(this.timeRemaining / 60) + "m";
-    } else {
-      return (this.timeRemaining % 60) + "s";
-    }
-  }
-
-  function tick() {
-    timer.timeRemaining--;
-    options.onTick(timer);
-    if(timer.timeRemaining <= 0) {
-      clearInterval(tickInterval);
-      pomodoro.onTimerEnd(timer);
-      options.onEnd(timer);
-    }
-  }
-}
-
-/*
-
-  Views
-
-*/
-
-// The code gets really cluttered down here. Refactor would be in order,
-// but I'm busier with other projects >_<
-
-function locationsMatch(location, listedPattern) {
-  return domainsMatch(location.domain, listedPattern.domain) &&
-    pathsMatch(location.path, listedPattern.path);
-}
-
-function parseLocation(location) {
-  var components = location.split('/');
-  return {domain: components.shift(), path: components.join('/')};
-}
-
-function pathsMatch(test, against) {
-  /*
-    index.php ~> [null]: pass
-    index.php ~> index: pass
-    index.php ~> index.php: pass
-    index.php ~> index.phpa: fail
-    /path/to/location ~> /path/to: pass
-    /path/to ~> /path/to: pass
-    /path/to/ ~> /path/to/location: fail
-  */
-
-  return !against || test.substr(0, against.length) == against;
-}
-
-function domainsMatch(test, against) {
-  /*
-    google.com ~> google.com: case 1, pass
-    www.google.com ~> google.com: case 3, pass
-    google.com ~> www.google.com: case 2, fail
-    google.com ~> yahoo.com: case 3, fail
-    yahoo.com ~> google.com: case 2, fail
-    bit.ly ~> goo.gl: case 2, fail
-    mail.com ~> gmail.com: case 2, fail
-    gmail.com ~> mail.com: case 3, fail
-  */
-
-  // Case 1: if the two strings match, pass
-  if(test === against) {
-    return true;
-  } else {
-    var testFrom = test.length - against.length - 1;
-
-    // Case 2: if the second string is longer than first, or they are the same
-    // length and do not match (as indicated by case 1 failing), fail
-    if(testFrom < 0) {
-      return false;
-    } else {
-      // Case 3: if and only if the first string is longer than the second and
-      // the first string ends with a period followed by the second string,
-      // pass
-      return test.substr(testFrom) === '.' + against;
-    }
-  }
-}
-
-function isLocationBlocked(location) {
-  for(var k in PREFS.blacklist) {
-    listedPattern = parseLocation(PREFS.blacklist[k]);
-    if(locationsMatch(location, listedPattern)) {
-      // Return true if the location is blocked.
-      return true;
-    }
-  }
-
-  // Now check whitelist.
-  for(var k in PREFS.whitelist) {
-    listedPattern = parseLocation(PREFS.whitelist[k]);
-    if(locationsMatch(location, listedPattern)) {
-      // Return false if the location is in whitelist.
-      return false;
-    }
-  }
-  
-  return false;
-}
-
-function executeInTabIfBlocked(action, tab) {
-  var file = "content_scripts/" + action + ".js", location;
-  location = tab.url.split('://');
-  location = parseLocation(location[1]);
-  
-  if(isLocationBlocked(location)) {
-    chrome.tabs.executeScript(tab.id, {file: file});
-  }
-}
-
-function executeInAllBlockedTabs(action) {
-  var windows = chrome.windows.getAll({populate: true}, function (windows) {
-    var tabs, tab, domain, listedDomain;
-    for(var i in windows) {
-      tabs = windows[i].tabs;
-      for(var j in tabs) {
-        executeInTabIfBlocked(action, tabs[j]);
-      }
-    }
-  });
-}
-
-var notification, mainPomodoro = new Pomodoro({
-  getDurations: function () { return PREFS.durations },
-  isContinuous: function() { return PREFS.continuous },
-  setEndContinuous: function(value) {
-    this.endContinuous = value;
-  },
-  timer: {
-    onEnd: function (timer) {
-      chrome.browserAction.setIcon({
-        path: ICONS.ACTION.PENDING[timer.pomodoro.nextMode]
-      });
-      chrome.browserAction.setBadgeText({text: ''});
-      
-      if(PREFS.showNotifications) {
-        var nextModeName = chrome.i18n.getMessage(timer.pomodoro.nextMode);
-        chrome.notifications.create("", {
-          type: "basic",
-          title: chrome.i18n.getMessage("timer_end_notification_header"),
-          message: chrome.i18n.getMessage("timer_end_notification_body",
-                                          nextModeName),
-          iconUrl: ICONS.FULL[timer.type]
-        }, function() {});
-      }
-      
-      if(PREFS.shouldRing) {
-        console.log("playing ring", RING);
-        RING.play();
+ var 
+   default_settings = {
+      blacklist: [
+        'facebook.com',
+        'twitter.com',
+        'tumblr.com',
+        'pinterest.com',
+        'myspace.com',
+        'livejournal.com',
+        'digg.com',
+        'stumbleupon.com',
+        'reddit.com',
+        'kongregate.com',
+        'newgrounds.com',
+        'addictinggames.com',
+        'hulu.com'
+      ],
+      whitelist: [],
+      durations: { // in seconds
+        work: 0.5 * 60,
+        break: 0.5 * 60
+      },
+      shouldRing: true,
+      clickRestarts: false,
+      timeblock: {
+        red: 5,
+        blue: 10,
+        black: 20,
       }
     },
-    onStart: function (timer) {
-      chrome.browserAction.setIcon({
-        path: ICONS.ACTION.CURRENT[timer.type]
-      });
-      chrome.browserAction.setBadgeBackgroundColor({
-        color: BADGE_BACKGROUND_COLORS[timer.type]
-      });
-      if(timer.type == 'work') {
-        executeInAllBlockedTabs('block');
+    settings = {},
+
+   reloadPrefs, getPrefs, savePrefs;
+
+   initPrefs = function() {
+      if(typeof localStorage['prefs'] !== 'undefined') {
+        settings = JSON.parse(localStorage['prefs']);
       } else {
-        executeInAllBlockedTabs('unblock');
+        // No prev settings found. defaults to default_setting
+        settings = default_settings;
+        savePrefs();
       }
-      if(notification) notification.cancel();
-      var tabViews = chrome.extension.getViews({type: 'tab'}), tab;
-      for(var i in tabViews) {
-        tab = tabViews[i];
-        if(typeof tab.startCallbacks !== 'undefined') {
-          tab.startCallbacks[timer.type]();
-        }
-      }
-    },
-    onTick: function (timer) {
-      chrome.browserAction.setBadgeText({text: timer.timeRemainingString()});
+      return settings;
+    };
+
+   getPrefs = function() {
+    // load prefs from the disk
+    return settings;
+   };
+
+   savePrefs = function() {
+      localStorage['prefs'] = JSON.stringify(settings);
+      return prefs;
+    };
+
+  return {
+    initPrefs : initPrefs,
+    getPrefs : getPrefs,
+    savePrefs : savePrefs
+  };
+}());
+
+pomodoro.main = (function() {
+
+
+
+}());
+// Simple timer to start/stop a work flow
+pomodoro.timer = (function () {
+  var 
+   callbackMap = {
+    onTick: null,
+    onStart: null,
+    onEnd: null,
+   },
+   configMap = {
+    work : 1, // in seconds
+    play: 1
+   },
+   stateMap = {
+    workMode: false,
+    isPaused: false,
+    isRunning:false,
+    timeRemaining: 0
+   },
+   tickInterval = 0,
+   timer = null,
+   
+   getTimeRemaining, isWorkMode,
+   initialize, start, pause, end, tick;
+
+  initialize = function(callbacks, durationConfig) {
+    timer = this;
+    callbackMap.onTick = callbacks.onTick;
+    callbackMap.onEnd = callbacks.onEnd;
+    callbackMap.onStart = callbacks.onStart;
+    if (durationConfig) {
+      configMap.work = durationConfig.work;
+      configMap.play = durationConfig.play;
     }
-  }
-});
+  };
 
-chrome.browserAction.onClicked.addListener(function (tab) {
-  if(mainPomodoro.running) { 
-      if(PREFS.clickRestarts) {
-          mainPomodoro.restart();
-      }
-      if (mainPomodoro.continuous) {
-        mainPomodoro.endContinuous = true;
-      }
-  } else {
-      mainPomodoro.start();
-  }
-});
+  getTimeRemaining = function() {
+    return timeRemaining;
+  };
 
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-  if(mainPomodoro.mostRecentMode == 'work') {
-    executeInTabIfBlocked('block', tab);
-  }
-});
+  isWorkMode = function () {
+    return stateMap.workMode;
+  };
 
-chrome.notifications.onClicked.addListener(function (id) {
-  // Clicking the notification brings you back to Chrome, in whatever window
-  // you were last using.
-  chrome.windows.getLastFocused(function (window) {
-    chrome.windows.update(window.id, {focused: true});
-  });
-});
+  start = function() {
+    stateMap.workMode = !stateMap.workMode;
+    stateMap.isRunning = true;
+    stateMap.isPaused = false;
+
+    stateMap.timeRemaining = stateMap.workMode ? configMap.work : configMap.play;
+
+    tickInterval = setInterval(tick, 1000);
+    callbackMap.onStart(timer);
+    callbackMap.onTick(timer);
+  };
+
+  tick = function() {
+    stateMap.timeRemaining--;
+    callbackMap.onTick(timer);
+    if(stateMap.timeRemaining <= 0) {
+      clearInterval(tickInterval);
+      end(timer);
+    }
+  };
+
+  end = function() {
+    stateMap.isRunning = false;
+    stateMap.isPaused  = false;
+    stateMap.timeRemaining = null;
+
+    callbackMap.onEnd(timer);
+    if (stateMap.workMode == true) {
+      // restart timer for break mode
+      start();
+    }
+  };
+
+  return {
+    initialize : initialize,
+    start : start,
+    isWorkMode: isWorkMode,
+    getTimeRemaining: getTimeRemaining
+  };
+}());
+
+function testCallback(timer) {
+  console.debug("printing timer isWorkMode " + timer.isWorkMode());
+}
+
+function tickCallback(timer) {
+  console.debug("Tick isWorkMode " + timer.isWorkMode());
+}
+
+var timer = pomodoro.timer.initialize( {onStart: testCallback, onEnd: testCallback, onTick: tickCallback}, {work: 2, play: 2});
+pomodoro.timer.start();

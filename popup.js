@@ -38,6 +38,7 @@ popup.shell = (function($container) {
   };
 
   togglePause = function(event) {
+    // mainPomodor.togglePause();
 
   };
 
@@ -47,7 +48,7 @@ popup.shell = (function($container) {
   };
 
   toggleContinuous  = function(event) {
-
+   // mainPomodor.toggleContinuous();
   };
 
   return { initModule : initModule };
