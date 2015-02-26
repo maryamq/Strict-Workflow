@@ -20,8 +20,8 @@ pomodoro.prefs = (function() {
       ],
       whitelist: [],
       durations: { // in seconds
-        work: 0.5 * 60,
-        break: 0.5 * 60
+        work: 2,
+        play: 2
       },
       badgeBgColor : {
         work: [192, 0, 0, 255],
@@ -43,12 +43,20 @@ pomodoro.prefs = (function() {
       if(typeof localStorage['prefs'] !== 'undefined') {
         diskSettings = JSON.parse(localStorage['prefs']);
         // This is useful when new properties are added.
-        settings =  $.extend({}, default_settings, diskSettings);
+        // Similary to $.extend
+        for (var key in default_settings) {
+          if (diskSettings.hasOwnProperty(key)) {
+            settings[key] = diskSettings[key];
+          } else {
+            settings[key] = default_settings[key];
+          }
+        }
       } else {
         // No prev settings found. defaults to default_setting
         settings = default_settings;
-        savePrefs();
       }
+
+      settings = default_settings; // BUG!!!! FOr test only
       return settings;
     };
 
@@ -73,40 +81,60 @@ pomodoro.main = (function() {
 // Todo start a single pomodoro
   var 
   settings = null,
-  callbackMap,
+  callbackMap = {},
+  stateMap = {
+    numPomodoros : 0,
+    numBlocksRequested : 1,
+  },
   initialize,
-  startTimer, timerTickCallback, startTimerCallback, endTimerCallback;
+  startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
 
   initialize = function() {
     pomodoro.prefs.initPrefs();
-    callbackMap = {onStart: startTimerCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
+    callbackMap = {onStart: startTimerCallback, onBreakStart: breakStartCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
+  };
+
+  startPomodoro = function(numBlocks) {
+    settings = pomodoro.prefs.getPrefs();
+    stateMap.numBlocksRequested = numBlocks
+    stateMap.numPomodoros = 0;
+    pomodoro.timer.initialize(callbackMap, settings.durations);
+    startTimer();
   };
 
   startTimer = function() {
-    settings = pomodoro.prefs.getPrefs();
-    pomodoro.timer.initialize(callbackMap, {work: 2, play: 2});
+    chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.work});
+    chrome.browserAction.setBadgeText ( { text: "work" } );
     pomodoro.timer.start();
   };
 
   startTimerCallback = function(timer) {
-    chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.work});
-    chrome.browserAction.setBadgeText ( { text: "work" } );
+    
+  };
+
+  breakStartCallback = function(timer) {
+    chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
+    chrome.browserAction.setBadgeText ( { text: "play" } );
   };
 
   timerTickCallback = function(timer) {
-    if (!timer.isWorkMode()) {
-      chrome.browserAction.setBadgeBackgroundColor({ color: settings.badgeBgColor.play});
-      chrome.browserAction.setBadgeText ( { text: "play" } );
-    }
+    
   };
 
   endTimerCallback = function(timer) {
-
+    stateMap.numPomodoros++;
+    if (stateMap.numPomodoros < stateMap.numBlocksRequested) {
+      // Only increment timer if the break mode has ended.
+      startTimer();
+    } else {
+      chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
+      chrome.browserAction.setBadgeText ( { text: "done" } );
+    }
   };
 
   return {
     initialize: initialize,
-    startTimer: startTimer
+    startPomodoro: startPomodoro
   }
 
 }());
@@ -139,6 +167,7 @@ pomodoro.timer = (function () {
     callbackMap.onTick = callbacks.onTick;
     callbackMap.onEnd = callbacks.onEnd;
     callbackMap.onStart = callbacks.onStart;
+    callbackMap.onBreakStart = callbacks.onBreakStart;
     if (durationConfig) {
       configMap.work = durationConfig.work;
       configMap.play = durationConfig.play;
@@ -179,10 +208,12 @@ pomodoro.timer = (function () {
     stateMap.isPaused  = false;
     stateMap.timeRemaining = null;
 
-    callbackMap.onEnd(timer);
     if (stateMap.workMode == true) {
       // restart timer for break mode
+      callbackMap.onBreakStart(timer);
       start();
+    } else {
+      callbackMap.onEnd(timer);
     }
   };
 
@@ -196,4 +227,3 @@ pomodoro.timer = (function () {
 
 
 pomodoro.main.initialize();
-pomodoro.main.startTimer();

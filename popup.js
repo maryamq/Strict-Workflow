@@ -1,20 +1,20 @@
 /*
   popup.js
-*/
+  */
 
-var popup = (function() {
-  var initModule = function($container) {
-    popup.shell.initModule($container);
-  };
+  var popup = (function() {
+    var initModule = function($container) {
+      popup.shell.initModule($container);
+    };
 
-  return {initModule: initModule};
-}());
+    return {initModule: initModule};
+  }());
 
-popup.shell = (function($container) {
+  popup.shell = (function($container) {
   //---------------- BEGIN MODULE SCOPE VARIABLES --------------
   var 
   background  = chrome.extension.getBackgroundPage(),
-  mainPomodoro = background.mainPomodoro,
+  mainPomodoro = background.pomodoro.main,
   prefs = background.PREFS,
   enablePause = false,
   jqueryMap = {},
@@ -43,15 +43,15 @@ popup.shell = (function($container) {
   };
 
   onStartSingle = function(event) {
-    mainPomodoro.start();
+    mainPomodoro.startPomodoro(1);
 
   };
 
   toggleContinuous  = function(event) {
-   // mainPomodor.toggleContinuous();
-  };
+   mainPomodoro.startPomodoro(2);
+ };
 
-  return { initModule : initModule };
+ return { initModule : initModule };
 
 }());
 
