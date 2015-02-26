@@ -23,6 +23,10 @@ pomodoro.prefs = (function() {
         work: 0.5 * 60,
         break: 0.5 * 60
       },
+      badgeBgColor : {
+        work: [192, 0, 0, 255],
+        play: [0, 192, 0, 255]
+      },
       shouldRing: true,
       clickRestarts: false,
       timeblock: {
@@ -38,6 +42,7 @@ pomodoro.prefs = (function() {
    initPrefs = function() {
       if(typeof localStorage['prefs'] !== 'undefined') {
         settings = JSON.parse(localStorage['prefs']);
+        settings = default_settings; //TODO: Bug remove
       } else {
         // No prev settings found. defaults to default_setting
         settings = default_settings;
@@ -64,8 +69,44 @@ pomodoro.prefs = (function() {
 }());
 
 pomodoro.main = (function() {
+// Todo start a single pomodoro
+  var 
+  settings = null,
+  callbackMap,
+  initialize,
+  startTimer, timerTickCallback, startTimerCallback, endTimerCallback;
 
+  initialize = function() {
+    pomodoro.prefs.initPrefs();
+    callbackMap = {onStart: startTimerCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
+  };
 
+  startTimer = function() {
+    settings = pomodoro.prefs.getPrefs();
+    pomodoro.timer.initialize(callbackMap, {work: 2, play: 2});
+    pomodoro.timer.start();
+  };
+
+  startTimerCallback = function(timer) {
+    chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.work});
+    chrome.browserAction.setBadgeText ( { text: "work" } );
+  };
+
+  timerTickCallback = function(timer) {
+    if (!timer.isWorkMode()) {
+      chrome.browserAction.setBadgeBackgroundColor({ color: settings.badgeBgColor.play});
+      chrome.browserAction.setBadgeText ( { text: "play" } );
+    }
+  };
+
+  endTimerCallback = function(timer) {
+
+  };
+
+  return {
+    initialize: initialize,
+    startTimer: startTimer
+  }
 
 }());
 // Simple timer to start/stop a work flow
@@ -152,13 +193,6 @@ pomodoro.timer = (function () {
   };
 }());
 
-function testCallback(timer) {
-  console.debug("printing timer isWorkMode " + timer.isWorkMode());
-}
 
-function tickCallback(timer) {
-  console.debug("Tick isWorkMode " + timer.isWorkMode());
-}
-
-var timer = pomodoro.timer.initialize( {onStart: testCallback, onEnd: testCallback, onTick: tickCallback}, {work: 2, play: 2});
-pomodoro.timer.start();
+pomodoro.main.initialize();
+pomodoro.main.startTimer();
