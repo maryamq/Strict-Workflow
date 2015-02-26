@@ -81,13 +81,18 @@ pomodoro.main = (function() {
 // Todo start a single pomodoro
   var 
   settings = null,
+  configMap = {
+    blockTabFile: "content_scripts/block.js",
+    unblockTabFile: "content_scripts/unblock.js"
+  },
   callbackMap = {},
   stateMap = {
     numPomodoros : 0,
     numBlocksRequested : 1,
   },
   initialize,
-  startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
+  executeInTabIfBlocked, executeInAllBlockedTabs, locationsMatch, parseLocation, isLocationBlocked, chromeBlockedTabListener,
+  domainsMatch, startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
 
   initialize = function() {
     pomodoro.prefs.initPrefs();
@@ -99,22 +104,31 @@ pomodoro.main = (function() {
     stateMap.numBlocksRequested = numBlocks
     stateMap.numPomodoros = 0;
     pomodoro.timer.initialize(callbackMap, settings.durations);
+    chrome.tabs.onUpdated.addListener(chromeBlockedTabListener);
+    // Call this to block currently opened windows.
+    executeInAllBlockedTabs(true);
     startTimer();
   };
 
   startTimer = function() {
     chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.work});
     chrome.browserAction.setBadgeText ( { text: "work" } );
+
     pomodoro.timer.start();
   };
 
-  startTimerCallback = function(timer) {
-    
+  chromeBlockedTabListener = function(tabId, changeInfo, tab) {
+    if (pomodoro.timer.isWorkMode()) {
+      executeInTabIfBlocked(true, tab);
+    }
   };
 
+  startTimerCallback = function(timer) {};
+    
   breakStartCallback = function(timer) {
     chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
     chrome.browserAction.setBadgeText ( { text: "play" } );
+    executeInAllBlockedTabs(false);
   };
 
   timerTickCallback = function(timer) {
@@ -129,8 +143,96 @@ pomodoro.main = (function() {
     } else {
       chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
       chrome.browserAction.setBadgeText ( { text: "done" } );
+      chrome.tabs.onUpdated.removeListener(chromeBlockedTabListener);
     }
   };
+
+// TODO(maryamq): This does not work.
+  locationsMatch = function(location, listedPattern) {
+    return domainsMatch(location.domain, listedPattern.domain) &&
+           !location.path || location.path.substr(0, listedPattern.path.length) == listedPattern.path;
+      //pathsMatch(location.path, listedPattern.path);
+  };
+
+  parseLocation = function(location) {
+    var components = location.split('/');
+    return {domain: components.shift(), path: components.join('/')};
+  };
+
+  isLocationBlocked = function(location) {
+    for(var k in settings.blacklist) {
+      listedPattern = parseLocation(settings.blacklist[k]);
+      if(locationsMatch(location, listedPattern)) {
+        // Return true if the location is blocked.
+        return true;
+      }
+    }
+
+    // Now check whitelist.
+    for(var k in settings.whitelist) {
+      listedPattern = parseLocation(settings.whitelist[k]);
+      if(locationsMatch(location, listedPattern)) {
+        // Return false if the location is in whitelist.
+        return false;
+      }
+    }
+    
+    return false;
+  };
+
+  executeInTabIfBlocked = function(blocked, tab) {
+    var file = blocked ? configMap.blockTabFile : configMap.unblockTabFile;
+    var location = tab.url.split('://');
+    location = parseLocation(location[1]);
+    
+    if(isLocationBlocked(location)) {
+      chrome.tabs.executeScript(tab.id, {file: file});
+    }
+  };
+
+  executeInAllBlockedTabs = function(blocked) {
+    var windows = chrome.windows.getAll({populate: true}, function (windows) {
+      var tabs, tab, domain, listedDomain;
+      for(var i in windows) {
+        tabs = windows[i].tabs;
+        for(var j in tabs) {
+          executeInTabIfBlocked(blocked, tabs[j]);
+        }
+      }
+    });
+  };
+
+ domainsMatch = function(test, against) {
+  /*
+    google.com ~> google.com: case 1, pass
+    www.google.com ~> google.com: case 3, pass
+    google.com ~> www.google.com: case 2, fail
+    google.com ~> yahoo.com: case 3, fail
+    yahoo.com ~> google.com: case 2, fail
+    bit.ly ~> goo.gl: case 2, fail
+    mail.com ~> gmail.com: case 2, fail
+    gmail.com ~> mail.com: case 3, fail
+  */
+
+    // Case 1: if the two strings match, pass
+    if(test === against) {
+      return true;
+    } else {
+      var testFrom = test.length - against.length - 1;
+
+      // Case 2: if the second string is longer than first, or they are the same
+      // length and do not match (as indicated by case 1 failing), fail
+      if(testFrom < 0) {
+        return false;
+      } else {
+        // Case 3: if and only if the first string is longer than the second and
+        // the first string ends with a period followed by the second string,
+        // pass
+        return test.substr(testFrom) === '.' + against;
+      }
+    }
+ };
+
 
   return {
     initialize: initialize,
