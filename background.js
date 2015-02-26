@@ -41,8 +41,9 @@ pomodoro.prefs = (function() {
 
    initPrefs = function() {
       if(typeof localStorage['prefs'] !== 'undefined') {
-        settings = JSON.parse(localStorage['prefs']);
-        settings = default_settings; //TODO: Bug remove
+        diskSettings = JSON.parse(localStorage['prefs']);
+        // This is useful when new properties are added.
+        settings =  $.extend({}, default_settings, diskSettings);
       } else {
         // No prev settings found. defaults to default_setting
         settings = default_settings;
