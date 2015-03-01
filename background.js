@@ -91,12 +91,13 @@ pomodoro.main = (function() {
     numBlocksRequested : 1,
   },
   initialize,
-  executeInTabIfBlocked, executeInAllBlockedTabs, locationsMatch, parseLocation, isLocationBlocked, chromeBlockedTabListener,
-  domainsMatch, startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
+  executeInTabIfBlocked, executeInAllBlockedTabs, isLocationMatched, parseLocation, isLocationBlocked, chromeBlockedTabListener,
+  startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
 
   initialize = function() {
     pomodoro.prefs.initPrefs();
-    callbackMap = {onStart: startTimerCallback, onBreakStart: breakStartCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
+    callbackMap = 
+       {onStart: startTimerCallback, onBreakStart: breakStartCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
   };
 
   startPomodoro = function(numBlocks) {
@@ -147,31 +148,44 @@ pomodoro.main = (function() {
     }
   };
 
-// TODO(maryamq): This does not work.
-  locationsMatch = function(location, listedPattern) {
-    return domainsMatch(location.domain, listedPattern.domain) &&
-           !location.path || location.path.substr(0, listedPattern.path.length) == listedPattern.path;
-      //pathsMatch(location.path, listedPattern.path);
-  };
-
-  parseLocation = function(location) {
+  parseLocation = function (location) {
     var components = location.split('/');
     return {domain: components.shift(), path: components.join('/')};
   };
 
+  isLocationMatched = function(url, pattern) {
+    var domainMatch = false;
+    var visitedParsedUrl = parseLocation(url);
+    var patternParsed = parseLocation(pattern);
+    // check if the domain matched.
+    if(visitedParsedUrl.domain === patternParsed.domain) {
+      domainMatch =  true;
+    } else if (patternParsed.domain.length > visitedParsedUrl.domain.length) {
+      domainMatch = false;
+    } else {
+      // url.domain.endsWith('.' + pattern.domain)
+      var suffix = "." + patternParsed.domain;
+      domainMatch = visitedParsedUrl.domain.indexOf(suffix, patternParsed.domain.length  - suffix.length) !== -1;
+    }
+    // If domain didn't match or there is no path in pattern, don't bother processing any more.
+    if (!domainMatch || !patternParsed.path) {
+      return domainMatch;
+    }
+    // check the path
+    return patternParsed.path.substr(0, visitedParsedUrl.pathlength) == visitedParsedUrl.path;
+  };
+
   isLocationBlocked = function(location) {
     for(var k in settings.blacklist) {
-      listedPattern = parseLocation(settings.blacklist[k]);
-      if(locationsMatch(location, listedPattern)) {
-        // Return true if the location is blocked.
+      if(isLocationMatched(location, settings.blacklist[k])) {
+        // Return true if the location is blocked. Blacklist supercedes whitelist.
         return true;
       }
     }
 
     // Now check whitelist.
     for(var k in settings.whitelist) {
-      listedPattern = parseLocation(settings.whitelist[k]);
-      if(locationsMatch(location, listedPattern)) {
+      if(isLocationMatched(location, settings.whitelist[k])) {
         // Return false if the location is in whitelist.
         return false;
       }
@@ -182,10 +196,8 @@ pomodoro.main = (function() {
 
   executeInTabIfBlocked = function(blocked, tab) {
     var file = blocked ? configMap.blockTabFile : configMap.unblockTabFile;
-    var location = tab.url.split('://');
-    location = parseLocation(location[1]);
-    
-    if(isLocationBlocked(location)) {
+   
+    if(isLocationBlocked(tab.url.split('://')[1])) {
       chrome.tabs.executeScript(tab.id, {file: file});
     }
   };
@@ -201,38 +213,6 @@ pomodoro.main = (function() {
       }
     });
   };
-
- domainsMatch = function(test, against) {
-  /*
-    google.com ~> google.com: case 1, pass
-    www.google.com ~> google.com: case 3, pass
-    google.com ~> www.google.com: case 2, fail
-    google.com ~> yahoo.com: case 3, fail
-    yahoo.com ~> google.com: case 2, fail
-    bit.ly ~> goo.gl: case 2, fail
-    mail.com ~> gmail.com: case 2, fail
-    gmail.com ~> mail.com: case 3, fail
-  */
-
-    // Case 1: if the two strings match, pass
-    if(test === against) {
-      return true;
-    } else {
-      var testFrom = test.length - against.length - 1;
-
-      // Case 2: if the second string is longer than first, or they are the same
-      // length and do not match (as indicated by case 1 failing), fail
-      if(testFrom < 0) {
-        return false;
-      } else {
-        // Case 3: if and only if the first string is longer than the second and
-        // the first string ends with a period followed by the second string,
-        // pass
-        return test.substr(testFrom) === '.' + against;
-      }
-    }
- };
-
 
   return {
     initialize: initialize,
