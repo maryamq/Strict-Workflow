@@ -124,7 +124,6 @@ pomodoro.main = (function() {
   startTimer = function() {
     chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.work});
     chrome.browserAction.setBadgeText ( { text: "work" } );
-
     pomodoro.timer.start();
   };
 
@@ -143,7 +142,7 @@ pomodoro.main = (function() {
   };
 
   timerTickCallback = function(timer) {
-    
+    // TODO: UI updates
   };
 
   endTimerCallback = function(timer) {
