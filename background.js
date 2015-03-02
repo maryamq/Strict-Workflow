@@ -57,7 +57,6 @@ pomodoro.prefs = (function() {
         settings = default_settings;
       }
 
-      settings = default_settings; // BUG!!!! FOr test only
       return settings;
     };
 
@@ -66,14 +65,25 @@ pomodoro.prefs = (function() {
     return settings;
    };
 
-   savePrefs = function(settings) {
+   savePrefs = function(new_settings) {
+      settings = new_settings;
       localStorage['prefs'] = JSON.stringify(settings);
     };
+
+  formatDuration = function(totalTimeMins) {
+    var hours = parseInt(totalTimeMins/60);
+    var mins = parseInt(totalTimeMins % 60);
+    var message = hours > 0 ? hours + "hr:" : "00hr:";
+    message += mins > 0 ? mins : "00";
+    message += "m";
+    return message;
+  };
 
   return {
     initPrefs : initPrefs,
     getPrefs : getPrefs,
-    savePrefs : savePrefs
+    savePrefs : savePrefs,
+    formatDuration: formatDuration
   };
 }());
 

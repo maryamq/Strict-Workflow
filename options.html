@@ -142,43 +142,39 @@
         <input id="should-ring" type="checkbox" />
         <label for="should-ring" data-i18n="options_should_ring"></label>
       </div>
-      <div>
-        <input id="click-pause" type="checkbox" />
-        <label for="click-pause">
-          <span>Allow Pause when the timer is running</span>
-        </label>
-      </div>
     </div>
     <div id="tabs-4">
       <span> Time blocks allow you to cycle through pomodors for a set period of time. </span>
       <p class="note">You can pick your preferred length of blocks for the modes below.
         TIP: Timeblocks are great if you want to block a certain block of time to focus on a particular task. During a timeblock session, 
         pomodoro will continue to cycle through work and rest phases. To keep you discipled, there is no way to stop time block.</p>
-      <div id="timeblock_small">
+      <div id="timeblock_blue">
         <label for="mins_timeblock_small">
           <span data-i18n-caps>Blue Mode</span>:
         </label>
-        <input id="work-duration" type="text" size="3" value="60"/>
+        <input id="blue-block" type="text" size="2" value="2"/>
         <span class="minutes"> Pomodoros</span>
+        <span class="note"> </span>
       </div>
 
-      <div id="timeblock_medium">
+      <div id="timeblock_red">
         <label for="mins_timeblock_medium">
           <span data-i18n-caps>Red Mode</span>:
         </label>
-        <input id="work-duration" type="text" size="3" value="120"/>
+        <input id="red-block" type="text" size="2" value="5"/>
         <span class="minutes"> Pomodoros</span>
+        <span class="note"> </span>
       </div>
 
-      <div id="timeblock_large">
+      <div id="timeblock_black">
         <label for="mins_timeblock_large">
           <span data-i18n-caps>Black Mode</span>:
         </label>
-        <input id="work-duration" type="text" size="3" value="240"/>
+        <input id="black-block" type="text" size="2" value="10"/>
         <span class="minutes"> Pomodoros</span>
+        <span class="note"> </span>
       </div>
-        
-    </div>
+     </div>
     <button type="button" id="save-button" data-i18n="options_save_changes"></button>
     <span id="save-successful" data-i18n="options_save_successful"></span>
   </form>
