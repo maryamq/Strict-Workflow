@@ -1,14 +1,11 @@
-/*
-  Localization
-*/
-
 
 var options = (function() {
   var 
   jqueryMap = {},
   settings = {},
   prefs = chrome.extension.getBackgroundPage().pomodoro.prefs,
-  initialize, saveClickHandler, setJqueryMap,blockNumChangeHandler;
+  
+  initialize, saveClickHandler, setJqueryMap, blockNumChangeHandler;
 
   setJqueryMap = function($container) {
     jqueryMap = {
@@ -43,8 +40,6 @@ var options = (function() {
     jqueryMap.$redBlock.change();
     jqueryMap.$blackBlock.change();
     jqueryMap.$blueBlock.change();
-
-
   };
 
   blockNumChangeHandler = function(event) {
@@ -65,7 +60,6 @@ var options = (function() {
     return false;
   };
 
-
   initialize = function($main) {
     settings = prefs.getPrefs();
     setJqueryMap($main);
@@ -78,4 +72,3 @@ var options = (function() {
 }());
 
 options.initialize($('#optionsContainer'));
-
