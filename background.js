@@ -1,4 +1,26 @@
 var  pomodoro =  {};
+pomodoro.utils = (function() {
+  var 
+  setLocalizedString;
+
+  setLocalizedString = function($elem) {
+    var key = $elem.attr("data-i18n");
+    if (!key) {
+      return "";
+    }
+    var message = chrome.i18n.getMessage(key);
+    message = $elem.attr("data-i18n-caps")
+        ? message.charAt(0).toUpperCase() + message.substr(1)
+        : message;
+    $elem.html(message);
+    return message;
+};
+return {
+  setLocalizedString : setLocalizedString
+}
+
+}());
+
 pomodoro.prefs = (function() {
 
  var 

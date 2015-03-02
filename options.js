@@ -3,8 +3,9 @@ var options = (function() {
   var 
   jqueryMap = {},
   settings = {},
-  prefs = chrome.extension.getBackgroundPage().pomodoro.prefs,
-  
+  mainPomodoro = chrome.extension.getBackgroundPage().pomodoro,
+  prefs = mainPomodoro.prefs,
+
   initialize, saveClickHandler, setJqueryMap, blockNumChangeHandler;
 
   setJqueryMap = function($container) {
@@ -21,6 +22,13 @@ var options = (function() {
       $blackBlock: $container.find("#timeblock_black input"),
       $save: $container.find("#save-button")
     };
+
+    //  Translate every spans that needs it.
+    var $textToTranslateArr = $container.find("span[data-i18n]");
+    for (var i = 0; i < $textToTranslateArr.length; i++) {
+      var string = mainPomodoro.utils.setLocalizedString($($textToTranslateArr[i]));
+      console.debug(string);
+    }
 
     jqueryMap.$save.click(saveClickHandler);
     jqueryMap.$workMins.val(settings.durations.work/60);
@@ -41,6 +49,7 @@ var options = (function() {
     jqueryMap.$blackBlock.change();
     jqueryMap.$blueBlock.change();
   };
+
 
   blockNumChangeHandler = function(event) {
     var $source = $(this);
