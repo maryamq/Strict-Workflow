@@ -2,142 +2,57 @@
   Localization
 */
 
-  $(function() {
-    $( "#tabs" ).tabs();
-  });
+
+var options = (function() {
+  var 
+  jqueryMap = {},
+  settings = {},
+  prefs = chrome.extension.getBackgroundPage().pomodoro.prefs,
+  initialize, saveClickHandler, setJqueryMap;
+
+  setJqueryMap = function($container) {
+    jqueryMap = {
+      $container : $container,
+      $tabs : $container.find("#tabs"),
+      $workMins: $container.find("#work-duration"),
+      $breakMins: $container.find("#break-duration"),
+      $showNotifications: $container.find("#show-notifications"),
+      $shouldRing: $container.find("#should-ring"),
+      $blacklist: $container.find("#blacklist"),
+      $save: $container.find("#save-button")
+    };
+
+    jqueryMap.$save.click(saveClickHandler);
+
+    jqueryMap.$workMins.val(settings.durations.work/60);
+    jqueryMap.$breakMins.val(settings.durations.play/60);
+    jqueryMap.$showNotifications.prop('checked', settings.showNotifications);
+    jqueryMap.$shouldRing.prop('checked', settings.shouldRing);
+    jqueryMap.$blacklist.val(settings.blacklist.join('\n'));
+
+  };
+
+  saveClickHandler = function (event) {
+    settings.durations.work = jqueryMap.$workMins.val() * 60;
+    settings.durations.play = jqueryMap.$breakMins.val() * 60;
+    settings.showNotifications = jqueryMap.$showNotifications.prop('checked');
+    settings.shouldRing = jqueryMap.$shouldRing.prop('checked');
+    settings.blacklist = jqueryMap.$blacklist.val().split(/\r?\n/);
+    prefs.savePrefs(settings);
+    return false;
+  };
 
 
-// Localize all elements with a data-i18n="message_name" attribute
-var localizedElements = document.querySelectorAll('[data-i18n]'), el, message;
-for(var i = 0; i < localizedElements.length; i++) {
-  el = localizedElements[i];
-  message = chrome.i18n.getMessage(el.getAttribute('data-i18n'));
-  
-  // Capitalize first letter if element has attribute data-i18n-caps
-  if(el.hasAttribute('data-i18n-caps')) {
-    message = message.charAt(0).toUpperCase() + message.substr(1);
-  }
-  
-  el.innerHTML = message;
-}
+  initialize = function($main) {
+    settings = prefs.getPrefs();
+    setJqueryMap($main);
+    jqueryMap.$tabs.tabs();
+  };
 
-/*
-  Form interaction
-*/
+  return {
+    initialize : initialize
+  };
+}());
 
-var form = document.getElementById('options-form'),
-  siteListEl = document.getElementById('site-list'),
-  whitelistEl = document.getElementById('blacklist-or-whitelist'),
-  showNotificationsEl = document.getElementById('show-notifications'),
-  shouldRingEl = document.getElementById('should-ring'),
-  clickRestartsEl = document.getElementById('click-restarts'),
-  saveSuccessfulEl = document.getElementById('save-successful'),
-  timeFormatErrorEl = document.getElementById('time-format-error'),
-  background = chrome.extension.getBackgroundPage(),
-  startCallbacks = {}, durationEls = {};
-  
-durationEls['work'] = document.getElementById('work-duration');
-durationEls['break'] = document.getElementById('break-duration');
+options.initialize($('#optionsContainer'));
 
-var TIME_REGEX = /^([0-9]+)(:([0-9]{2}))?$/;
-
-form.onsubmit = function () {
-  $.get('Hello');
-  console.log("form submitted");
-  var durations = {}, duration, durationStr, durationMatch;
-
-  var newSiteList = siteListEl.value.split(/\r?\n/);
-  var isExtended = background.isListExtended(newSiteList);
-  if (background.mainPomodoro.mostRecentMode == 'work') {
-    if (whitelistEl.selectedIndex == 1 && isExtended) {
-      // Cant extend the allow list
-      alert("Cannot extend allow list while work.");
-
-    } else if (whitelistEl.selectedIndex != 1 && !isExtended) {
-      alert ("Cannot shorten a blacklist.");
-    }
-  }
-
-  
-  for(var key in durationEls) {
-    durationStr = durationEls[key].value;
-    durationMatch = durationStr.match(TIME_REGEX);
-    if(durationMatch) {
-      console.log(durationMatch);
-      durations[key] = (60 * parseInt(durationMatch[1], 10));
-      if(durationMatch[3]) {
-        durations[key] += parseInt(durationMatch[3], 10);
-      }
-    } else {
-      timeFormatErrorEl.className = 'show';
-      return false;
-    } 
-  }
-  
-  console.log(durations);
-  
-  background.setPrefs({
-    siteList:           siteListEl.value.split(/\r?\n/),
-    durations:          durations,
-    showNotifications:  showNotificationsEl.checked,
-    shouldRing:         shouldRingEl.checked,
-    clickRestarts:      clickRestartsEl.checked,
-    whitelist:          whitelistEl.selectedIndex == 1
-  })
-  saveSuccessfulEl.className = 'show';
-  return false;
-}
-
-siteListEl.onfocus = formAltered;
-showNotificationsEl.onchange = formAltered;
-shouldRingEl.onchange = formAltered;
-clickRestartsEl.onchange = formAltered;
-whitelistEl.onchange = formAltered;
-
-function formAltered() {
-  saveSuccessfulEl.removeAttribute('class');
-  timeFormatErrorEl.removeAttribute('class');
-}
-
-siteListEl.value = background.PREFS.siteList.join("\n");
-showNotificationsEl.checked = background.PREFS.showNotifications;
-shouldRingEl.checked = background.PREFS.shouldRing;
-clickRestartsEl.checked = background.PREFS.clickRestarts;
-whitelistEl.selectedIndex = background.PREFS.whitelist ? 1 : 0;
-
-var duration, minutes, seconds;
-for(var key in durationEls) {
-  duration = background.PREFS.durations[key];
-  seconds = duration % 60;
-  minutes = (duration - seconds) / 60;
-  if(seconds >= 10) {
-    durationEls[key].value = minutes + ":" + seconds;
-  } else if(seconds > 0) {
-    durationEls[key].value = minutes + ":0" + seconds;
-  } else {
-    durationEls[key].value = minutes;
-  }
-  durationEls[key].onfocus = formAltered;
-}
-
-function setInputDisabled(state) {
-  siteListEl.disabled = state;
-  whitelistEl.disabled = state;
-  for(var key in durationEls) {
-    durationEls[key].disabled = state;
-  }
-}
-
-startCallbacks.work = function () {
-  document.body.className = 'work';
-  setInputDisabled(false);
-}
-
-startCallbacks.break = function () {
-  document.body.removeAttribute('class');
-  setInputDisabled(false);
-}
-
-if(background.mainPomodoro.mostRecentMode == 'work') {
-  startCallbacks.work();
-}

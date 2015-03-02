@@ -27,6 +27,7 @@ pomodoro.prefs = (function() {
         work: [192, 0, 0, 255],
         play: [0, 192, 0, 255]
       },
+      showNotifications: true,
       shouldRing: true,
       clickRestarts: false,
       timeblock: {
@@ -65,9 +66,8 @@ pomodoro.prefs = (function() {
     return settings;
    };
 
-   savePrefs = function() {
+   savePrefs = function(settings) {
       localStorage['prefs'] = JSON.stringify(settings);
-      return prefs;
     };
 
   return {
