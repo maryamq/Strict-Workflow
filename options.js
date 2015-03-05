@@ -6,7 +6,7 @@ var options = (function() {
   mainPomodoro = chrome.extension.getBackgroundPage().pomodoro,
   prefs = mainPomodoro.prefs,
 
-  initialize, saveClickHandler, setJqueryMap, blockNumChangeHandler;
+  initialize, showStatusMessage, saveClickHandler, setJqueryMap, blockNumChangeHandler;
 
   setJqueryMap = function($container) {
     jqueryMap = {
@@ -20,14 +20,14 @@ var options = (function() {
       $redBlock: $container.find("#timeblock_red input"),
       $blueBlock: $container.find("#timeblock_blue input"),
       $blackBlock: $container.find("#timeblock_black input"),
-      $save: $container.find("#save-button")
+      $save: $container.find("#save-button"),
+      $statusMessage: $container.find("#status-message"),
     };
 
     //  Translate every spans that needs it.
-    var $textToTranslateArr = $container.find("span[data-i18n]");
+    var $textToTranslateArr = $container.find("[data-i18n]");
     for (var i = 0; i < $textToTranslateArr.length; i++) {
-      var string = mainPomodoro.utils.setLocalizedString($($textToTranslateArr[i]));
-      console.debug(string);
+      mainPomodoro.utils.setLocalizedString($($textToTranslateArr[i]));
     }
 
     jqueryMap.$save.click(saveClickHandler);
@@ -39,6 +39,7 @@ var options = (function() {
     jqueryMap.$blueBlock.val(settings.timeblock.blue);
     jqueryMap.$blackBlock.val(settings.timeblock.black);
     jqueryMap.$blacklist.val(settings.blacklist.join('\n'));
+    jqueryMap.$statusMessage.hide();
 
     //event handlers
     jqueryMap.$redBlock.change(blockNumChangeHandler);
@@ -59,13 +60,40 @@ var options = (function() {
     $note.html("(Total Time: " + message + ")");
   };
 
+  showStatusMessage = function(messageKey, isError) {
+    jqueryMap.$statusMessage.attr("data-i18n", messageKey);
+    mainPomodoro.utils.setLocalizedString(jqueryMap.$statusMessage);
+    jqueryMap.$statusMessage.attr("class", !isError ? "option-save-success": "option-save-error");
+    jqueryMap.$statusMessage.show();
+  },
+
   saveClickHandler = function (event) {
-    settings.durations.work = jqueryMap.$workMins.val() * 60;
-    settings.durations.play = jqueryMap.$breakMins.val() * 60;
+    var workMins = jqueryMap.$workMins.val();
+    var playMins = jqueryMap.$breakMins.val();
+    var redBlock = jqueryMap.$redBlock.val();
+    var blueBlock = jqueryMap.$blueBlock.val();
+    var blackBlock = jqueryMap.$blackBlock.val();
+    jqueryMap.$statusMessage.show();
+    // Basic validation for time and timeblocks.
+    if (!$.isNumeric(workMins) || !$.isNumeric(playMins)) {
+      showStatusMessage("options_time_format_error", true);
+      return;
+    }
+    if (!$.isNumeric(redBlock) || !$.isNumeric(blueBlock) || !$.isNumeric(blackBlock)) {
+      showStatusMessage("options_time_block_error", true);
+      return;
+    }
+
+    settings.durations.work = workMins * 60;
+    settings.durations.play = playMins * 60;
     settings.showNotifications = jqueryMap.$showNotifications.prop('checked');
     settings.shouldRing = jqueryMap.$shouldRing.prop('checked');
     settings.blacklist = jqueryMap.$blacklist.val().split(/\r?\n/);
+    settings.timeblock.blue = blueBlock
+    settings.timeblock.red = redBlock
+    settings.timeblock.black = blackBlock
     prefs.savePrefs(settings);
+    showStatusMessage("options_save_successful", false);
     return false;
   };
 

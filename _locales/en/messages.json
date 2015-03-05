@@ -34,17 +34,9 @@
     "message": "Strict Workflow Options",
     "description": "The title of the options page"
   },
-  "options_blacklist_verb": {
-    "message": "Block",
-    "description": "On options page, the dropdown option that indicates the sites are a blacklist"
-  },
-  "options_whitelist_verb": {
-    "message": "Only allow",
-    "description": "On options page, the dropdown option that indicates the sites are a whitelist"
-  },
   "options_site_list_header": {
-    "message": "the sites on this list:",
-    "description": "On the options page, the message above the site list (with the block/only-allow dropdown before it)"
+    "message": "Block sites on this list",
+    "description": "On the options page, the message above the site black list"
   },
   "options_site_list_info": {
     "message": "Enter one site per line, like \"youtube.com\" or \"google.com/reader/\". We'll block/allow all URLs with that base.",
@@ -59,13 +51,28 @@
     "description": "On options page, message shown during a work session to indicate that some options are disabled"
   },
   "options_time_format_error": {
-    "message": "Time must be in the format MM or MM:SS",
+    "message": "Time must be in the numeric format",
     "description": "On the options page, error message indicating bad format for timer duration"
   },
+  "options_time_block_error": {
+    "message": "Time blocks must be in the numeric format",
+    "description": "On the options page, error message indicating bad format for timer block"
+  },
+
   "options_show_notifications": {
     "message": "Show a notification when a timer finishes",
     "description": "On the options page, label for the checkbox that enables/disables the notification at the end of a timer"
   },
+  "options_timeblock_description": {
+    "message" : "Timeblocks let you block off a chunk of time to focus on your work.",
+    "description": "On the options page, description for the timeblock tab"
+  },
+  "options_timeblock_details": {
+    "message" : "You can pick your preferred length of blocks for the modes below. During a timeblock session, 
+        pomodoro will continue to cycle through work and rest phases. To keep you discipled, you cannot stop/pause timeblock.",
+    "description": "On the options page, details for the timeblock"
+  },
+
   "options_should_ring": {
     "message": "Ring when a timer finishes (audio)",
     "description": "On the options page, label for the checkbox that enables/disables ringing sound at the end of a timer"

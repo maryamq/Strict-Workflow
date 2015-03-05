@@ -53,8 +53,8 @@ pomodoro.prefs = (function() {
       shouldRing: true,
       clickRestarts: false,
       timeblock: {
-        red: 5,
-        blue: 10,
+        blue: 5,
+        red: 10,
         black: 20,
       }
     },
