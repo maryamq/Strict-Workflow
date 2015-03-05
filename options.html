@@ -25,24 +25,11 @@
     font-weight: normal;
   }
 
-  #site-list-wrapper {
-    margin-bottom: 2em;
-  }
-
-  #site-list-header {
-    font-weight: bold;
-    margin-bottom: .25em;
-  }
-
   .pomodoro-sitelist {
     height: 16em;
     width: 30em;
     padding: 5px;
     font: -webkit-control;
-  }
-
-  #site-list-wrapper .note {
-    width: 33em;
   }
 
   .option-save-success{
@@ -100,6 +87,12 @@
     margin-top: 0.3em;
     margin-bottom: 0;
   }
+
+  .timeblock label {
+    margin-left:10px;
+    margin-right:5px;
+
+  }
   </style>
 
 </head>
@@ -149,8 +142,8 @@
     <div id="tabs-4">
       <span data-i18n="options_timeblock_description">  </span>
       <p class="note" ata-i18n="options_timeblock_details"></p>
-      <div id="timeblock_blue">
-        <label for="mins_timeblock_small">
+      <div id="timeblock_blue" class="timeblock">
+        <label for="timeblock_blue">
           <span data-i18n-caps>Blue Mode</span>:
         </label>
         <input id="blue-block" type="text" size="2" value="2"/>
@@ -158,8 +151,8 @@
         <span class="note"> </span>
       </div>
 
-      <div id="timeblock_red">
-        <label for="mins_timeblock_medium">
+      <div id="timeblock_red" class="timeblock">
+        <label for="timeblock_red">
           <span data-i18n-caps>Red Mode</span>:
         </label>
         <input id="red-block" type="text" size="2" value="5"/>
@@ -167,8 +160,8 @@
         <span class="note"> </span>
       </div>
 
-      <div id="timeblock_black">
-        <label for="mins_timeblock_large">
+      <div id="timeblock_black" class="timeblock">
+        <label for="timeblock_black" >
           <span data-i18n-caps>Black Mode</span>:
         </label>
         <input id="black-block" type="text" size="2" value="10"/>
