@@ -1,7 +1,7 @@
 var  pomodoro =  {};
 pomodoro.utils = (function() {
   var 
-  setLocalizedString;
+  setLocalizedString, notifyUser;
 
   setLocalizedString = function($elem) {
     var key = $elem.attr("data-i18n");
@@ -10,37 +10,59 @@ pomodoro.utils = (function() {
     }
     var message = chrome.i18n.getMessage(key);
     message = $elem.attr("data-i18n-caps")
-        ? message.charAt(0).toUpperCase() + message.substr(1)
-        : message;
+    ? message.charAt(0).toUpperCase() + message.substr(1)
+    : message;
     $elem.html(message);
     return message;
-};
-return {
-  setLocalizedString : setLocalizedString
-}
+  };
+
+
+  notifyUser = function(message_key) {
+    var settings = pomodoro.prefs.getPrefs();
+    if (settings.shouldRing) {
+       //var sound = new Audio('yourSound.mp3');
+       //sound.play();
+     }
+
+     if (settings.showNotifications) {
+      var opt = {
+        type: "basic",
+        title: chrome.i18n.getMessage("timer_end_notification_header"),
+        message: chrome.i18n.getMessage(message_key),
+        iconUrl: "icons/icon16.png"
+      };
+      chrome.notifications.create("breaknotification",opt,function(){});
+      //include this line if you want to clear the notification after 5 seconds
+      setTimeout(function(){chrome.notifications.clear("breaknotification",function(){});},5000);
+    }
+  };
+  return {
+    setLocalizedString : setLocalizedString,
+    notifyUser: notifyUser
+  };
 
 }());
 
 pomodoro.prefs = (function() {
 
  var 
-   default_settings = {
-      blacklist: [
-        'facebook.com',
-        'twitter.com',
-        'tumblr.com',
-        'pinterest.com',
-        'myspace.com',
-        'livejournal.com',
-        'digg.com',
-        'stumbleupon.com',
-        'reddit.com',
-        'kongregate.com',
-        'newgrounds.com',
-        'addictinggames.com',
-        'hulu.com'
-      ],
-      whitelist: [],
+ default_settings = {
+  blacklist: [
+  'facebook.com',
+  'twitter.com',
+  'tumblr.com',
+  'pinterest.com',
+  'myspace.com',
+  'livejournal.com',
+  'digg.com',
+  'stumbleupon.com',
+  'reddit.com',
+  'kongregate.com',
+  'newgrounds.com',
+  'addictinggames.com',
+  'hulu.com'
+  ],
+  whitelist: [],
       durations: { // in seconds
         work: 2,
         play: 2
@@ -60,9 +82,9 @@ pomodoro.prefs = (function() {
     },
     settings = {},
 
-   reloadPrefs, getPrefs, savePrefs;
+    reloadPrefs, getPrefs, savePrefs;
 
-   initPrefs = function() {
+    initPrefs = function() {
       if(typeof localStorage['prefs'] !== 'undefined') {
         diskSettings = JSON.parse(localStorage['prefs']);
         // This is useful when new properties are added.
@@ -82,15 +104,15 @@ pomodoro.prefs = (function() {
       return settings;
     };
 
-   getPrefs = function() {
+    getPrefs = function() {
     // load prefs from the disk
     return settings;
-   };
+  };
 
-   savePrefs = function(new_settings) {
-      settings = new_settings;
-      localStorage['prefs'] = JSON.stringify(settings);
-    };
+  savePrefs = function(new_settings) {
+    settings = new_settings;
+    localStorage['prefs'] = JSON.stringify(settings);
+  };
 
   formatDuration = function(totalTimeMins) {
     var hours = parseInt(totalTimeMins/60);
@@ -111,39 +133,47 @@ pomodoro.prefs = (function() {
 
 pomodoro.main = (function() {
 // Todo start a single pomodoro
-  var 
-  settings = null,
-  configMap = {
-    blockTabFile: "content_scripts/block.js",
-    unblockTabFile: "content_scripts/unblock.js"
-  },
-  callbackMap = {},
-  stateMap = {
-    numPomodoros : 0,
-    numBlocksRequested : 1,
-  },
-  initialize,
-  executeInTabIfBlocked, executeInAllBlockedTabs, isLocationMatched, parseLocation, isLocationBlocked, chromeBlockedTabListener,
-  startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
+var 
+settings = null,
+configMap = {
+  blockTabFile: "content_scripts/block.js",
+  unblockTabFile: "content_scripts/unblock.js"
+},
+callbackMap = {},
+stateMap = {
+  numPomodoros : 0,
+  numBlocksRequested : 1,
+  lastUpdateMinsRemaining: 0,
+  isRunning: false
+},
+initialize, 
+executeInTabIfBlocked, executeInAllBlockedTabs, isLocationMatched, parseLocation, isLocationBlocked, chromeBlockedTabListener,
+startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
 
-  initialize = function() {
-    pomodoro.prefs.initPrefs();
-    callbackMap = 
-       {onStart: startTimerCallback, onBreakStart: breakStartCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
-  };
+initialize = function() {
+  pomodoro.prefs.initPrefs();
+  callbackMap = 
+  {onStart: startTimerCallback, onBreakStart: breakStartCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
+};
 
-  startPomodoro = function(numBlocks) {
-    settings = pomodoro.prefs.getPrefs();
-    stateMap.numBlocksRequested = numBlocks
-    stateMap.numPomodoros = 0;
-    pomodoro.timer.initialize(callbackMap, settings.durations);
-    chrome.tabs.onUpdated.addListener(chromeBlockedTabListener);
+startPomodoro = function(numBlocks) {
+  if (stateMap.isRunning) {
+    return;
+  }
+  settings = pomodoro.prefs.getPrefs();
+  stateMap.numBlocksRequested = numBlocks
+  stateMap.numPomodoros = 0;
+  stateMap.lastUpdateMinsRemaining = 0;
+  pomodoro.timer.initialize(callbackMap, settings.durations);
+  chrome.tabs.onUpdated.addListener(chromeBlockedTabListener);
     // Call this to block currently opened windows.
     executeInAllBlockedTabs(true);
     startTimer();
   };
 
+
   startTimer = function() {
+    stateMap.isRunning = true;
     chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.work});
     chrome.browserAction.setBadgeText ( { text: "work" } );
     pomodoro.timer.start();
@@ -156,15 +186,24 @@ pomodoro.main = (function() {
   };
 
   startTimerCallback = function(timer) {};
-    
+
   breakStartCallback = function(timer) {
     chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
     chrome.browserAction.setBadgeText ( { text: "play" } );
     executeInAllBlockedTabs(false);
+    pomodoro.utils.notifyUser("timer_break_message");
+    // TODO: show notification
   };
 
   timerTickCallback = function(timer) {
-    // TODO: UI updates
+    var secsRemaining = timer.getTimeRemaining();
+    var minsRemaining = Math.round(secsRemaining/60);
+    if (secsRemaining < 60) {
+      chrome.browserAction.setBadgeText ( { text: secsRemaining + "s"} );
+    } else if (minsRemaining != stateMap.lastUpdateMinsRemaining) {
+      chrome.browserAction.setBadgeText ( { text: minsRemaining + "m"} );
+      stateMap.lastUpdateMinsRemaining = minsRemaining;
+    }
   };
 
   endTimerCallback = function(timer) {
@@ -172,10 +211,13 @@ pomodoro.main = (function() {
     if (stateMap.numPomodoros < stateMap.numBlocksRequested) {
       // Only increment timer if the break mode has ended.
       startTimer();
+      pomodoro.utils.notifyUser("timer_work_message");
     } else {
       chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
       chrome.browserAction.setBadgeText ( { text: "done" } );
       chrome.tabs.onUpdated.removeListener(chromeBlockedTabListener);
+      stateMap.isRunning = false;
+      pomodoro.utils.notifyUser("timer_all_done");
     }
   };
 
@@ -227,7 +269,7 @@ pomodoro.main = (function() {
 
   executeInTabIfBlocked = function(blocked, tab) {
     var file = blocked ? configMap.blockTabFile : configMap.unblockTabFile;
-   
+
     if(isLocationBlocked(tab.url.split('://')[1])) {
       chrome.tabs.executeScript(tab.id, {file: file});
     }
@@ -254,26 +296,26 @@ pomodoro.main = (function() {
 // Simple timer to start/stop a work flow
 pomodoro.timer = (function () {
   var 
-   callbackMap = {
+  callbackMap = {
     onTick: null,
     onStart: null,
     onEnd: null,
-   },
-   configMap = {
+  },
+  configMap = {
     work : 1, // in seconds
     play: 1
-   },
-   stateMap = {
+  },
+  stateMap = {
     workMode: false,
     isPaused: false,
     isRunning:false,
     timeRemaining: 0
-   },
-   tickInterval = 0,
-   timer = null,
-   
-   getTimeRemaining, isWorkMode,
-   initialize, start, pause, end, tick;
+  },
+  tickInterval = 0,
+  timer = null,
+
+  getTimeRemaining, isWorkMode,
+  initialize, start, pause, end, tick;
 
   initialize = function(callbacks, durationConfig) {
     timer = this;
@@ -288,7 +330,7 @@ pomodoro.timer = (function () {
   };
 
   getTimeRemaining = function() {
-    return timeRemaining;
+    return stateMap.timeRemaining;
   };
 
   isWorkMode = function () {

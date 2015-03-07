@@ -98,14 +98,16 @@
     "message": "Time's up!",
     "description": "Bold header of pop-up notification when a timer ends"
   },
-  "timer_end_notification_body": {
-    "message": "Time for the $TYPE$ phase.",
-    "description": "Body of pop-up notification when a timer ends",
-    "placeholders": {
-      "type": {
-        "content": "$1",
-        "example": "work"
-      }
-    }
+  "timer_break_message": {
+    "message": "Great Job! Take a break and celebrate!",
+    "description": "Bold header of pop-up notification when a timer ends"
+  },
+  "timer_work_message": {
+    "message": "Lets get back to work!",
+    "description": "Bold header of pop-up notification when a timer ends"
+  },
+  "timer_all_done": {
+    "message": "All done :)",
+    "description": "Bold header of pop-up notification when a timer ends"
   }
 }
