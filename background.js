@@ -1,6 +1,7 @@
 var  pomodoro =  {};
 pomodoro.utils = (function() {
   var 
+  sound = new Audio("ring.ogg"),
   setLocalizedString, notifyUser;
 
   setLocalizedString = function($elem) {
@@ -20,8 +21,7 @@ pomodoro.utils = (function() {
   notifyUser = function(message_key) {
     var settings = pomodoro.prefs.getPrefs();
     if (settings.shouldRing) {
-       //var sound = new Audio('yourSound.mp3');
-       //sound.play();
+       sound.play();
      }
 
      if (settings.showNotifications) {
