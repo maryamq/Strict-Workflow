@@ -47,22 +47,22 @@ pomodoro.prefs = (function() {
 
  var 
  default_settings = {
-  blacklist: [
-  'facebook.com',
-  'twitter.com',
-  'tumblr.com',
-  'pinterest.com',
-  'myspace.com',
-  'livejournal.com',
-  'digg.com',
-  'stumbleupon.com',
-  'reddit.com',
-  'kongregate.com',
-  'newgrounds.com',
-  'addictinggames.com',
-  'hulu.com'
-  ],
-  whitelist: [],
+      blacklist: [
+      'facebook.com',
+      'twitter.com',
+      'tumblr.com',
+      'pinterest.com',
+      'myspace.com',
+      'livejournal.com',
+      'digg.com',
+      'stumbleupon.com',
+      'reddit.com',
+      'kongregate.com',
+      'newgrounds.com',
+      'addictinggames.com',
+      'hulu.com'
+      ],
+      whitelist: [],
       durations: { // in seconds
         work: 2,
         play: 2

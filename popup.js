@@ -15,7 +15,6 @@
   var 
   background  = chrome.extension.getBackgroundPage(),
   mainPomodoro = background.pomodoro.main,
-  prefs = background.PREFS,
   enablePause = false,
   jqueryMap = {},
 
@@ -26,30 +25,28 @@
       $container : $mainContainer,
       $pause      : $mainContainer.find( '.popup-pause'),
       $startSingle      : $mainContainer.find( '.popup-start-single'),
-      $toggleContinuous      : $mainContainer.find( '.popup-toggle-continuous'),
+      $startBlueMode      : $mainContainer.find( '.popup-blue'),
+      $startRedMode      : $mainContainer.find( '.popup-red'),
+      $startBlackMode      : $mainContainer.find( '.popup-black'),
     };
   };
 
   initModule = function($container) {
     setJqueryMap($container);
-    jqueryMap.$pause.click(togglePause);
-    jqueryMap.$startSingle.click(onStartSingle);
-    jqueryMap.$toggleContinuous.click(toggleContinuous);
+    var workmodes = background.pomodoro.prefs.getPrefs().timeblock;
+    jqueryMap.$startSingle.click({pomoCount: 1}, startPomodoro);
+    jqueryMap.$startBlueMode.click({pomoCount: workmodes.blue}, startPomodoro);
+    jqueryMap.$startRedMode.click({pomoCount: workmodes.red}, startPomodoro);
+    jqueryMap.$startBlackMode.click({pomoCount: workmodes.black}, startPomodoro);
+    // setup titles
+    jqueryMap.$startBlueMode.html("Blue mode (" + workmodes.blue + ")");
+    jqueryMap.$startRedMode.html("Red mode (" + workmodes.red + ")");
+    jqueryMap.$startBlackMode.html("Black mode (" + workmodes.black + ")");
   };
 
-  togglePause = function(event) {
-    // mainPomodor.togglePause();
-
+  startPomodoro = function(event) {
+    mainPomodoro.startPomodoro(event.data.pomoCount);
   };
-
-  onStartSingle = function(event) {
-    mainPomodoro.startPomodoro(1);
-
-  };
-
-  toggleContinuous  = function(event) {
-   mainPomodoro.startPomodoro(2);
- };
 
  return { initModule : initModule };
 
