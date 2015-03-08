@@ -110,80 +110,80 @@
 <body>
   <div id ="optionsContainer">
     <div id ="status-message"></div>
-  <div id="tabs">
-    <ul>
-      <li><a href="#tabs-3">General</a></li>
-      <li><a href="#tabs-1">Blacklist</a></li>
-      <li><a href="#tabs-4">Time Blocks</a></li>
-    </ul>
-    <form id="options-form">
-      <div id="tabs-1">
-        <div id="blacklist-wrapper">
-          <header id="blacklist-header">
-            <span data-i18n="options_site_list_header"></span>
-          </header>
-          <textarea id="blacklist" class="pomodoro-sitelist"></textarea>
-          <p class="note" data-i18n="options_site_list_info"></p>
-          <p class="note" data-i18n="options_site_list_syntax"></p>
+    <div id="tabs">
+      <ul>
+        <li><a href="#tabs-3">General</a></li>
+        <li><a href="#tabs-1">Blacklist</a></li>
+        <li><a href="#tabs-4">Time Blocks</a></li>
+      </ul>
+      <form id="options-form">
+        <div id="tabs-1">
+          <div id="blacklist-wrapper">
+            <header id="blacklist-header">
+              <span data-i18n="options_site_list_header"></span>
+            </header>
+            <textarea id="blacklist" class="pomodoro-sitelist"></textarea>
+            <p class="note" data-i18n="options_site_list_info"></p>
+            <p class="note" data-i18n="options_site_list_syntax"></p>
+          </div>
+        </div>
+        <div id="tabs-3">
+         <div id="durations">
+          <label for="work-duration">
+            <span data-i18n="work" data-i18n-caps></span>:
+          </label>
+          <input id="work-duration" type="text" size="2" />
+          <span class="minutes" data-i18n="minutes"></span>
+          <label for="break-duration">
+            <span data-i18n="break" data-i18n-caps></span>:
+          </label>
+          <input id="break-duration" type="text" size="2" />
+          <span class="minutes" data-i18n="minutes"></span>
+        </div>
+        <div>
+          <input id="show-notifications" type="checkbox" />
+          <label for="show-notifications" data-i18n="options_show_notifications"></label>
+        </div>
+        <div>
+          <input id="should-ring" type="checkbox" />
+          <label for="should-ring" data-i18n="options_should_ring"></label>
         </div>
       </div>
-      <div id="tabs-3">
-       <div id="durations">
-        <label for="work-duration">
-          <span data-i18n="work" data-i18n-caps></span>:
-        </label>
-        <input id="work-duration" type="text" size="2" />
-        <span class="minutes" data-i18n="minutes"></span>
-        <label for="break-duration">
-          <span data-i18n="break" data-i18n-caps></span>:
-        </label>
-        <input id="break-duration" type="text" size="2" />
-        <span class="minutes" data-i18n="minutes"></span>
-      </div>
-      <div>
-        <input id="show-notifications" type="checkbox" />
-        <label for="show-notifications" data-i18n="options_show_notifications"></label>
-      </div>
-      <div>
-        <input id="should-ring" type="checkbox" />
-        <label for="should-ring" data-i18n="options_should_ring"></label>
-      </div>
-    </div>
-    <div id="tabs-4">
-      <span data-i18n="options_timeblock_description">  </span>
-      <p class="note" ata-i18n="options_timeblock_details"></p>
-      <div id="timeblock_blue" class="timeblock">
-        <label for="timeblock_blue">
-          <span data-i18n-caps>Blue Mode</span>:
-        </label>
-        <input id="blue-block" type="text" size="2" value="2"/>
-        <span class="minutes"> Pomodoros</span>
-        <span class="note"> </span>
-      </div>
+      <div id="tabs-4">
+        <span data-i18n="options_timeblock_description">  </span>
+        <p class="note" ata-i18n="options_timeblock_details"></p>
+        <div id="timeblock_blue" class="timeblock">
+          <label for="timeblock_blue">
+            <span data-i18n-caps>Blue Mode</span>:
+          </label>
+          <input id="blue-block" type="text" size="2" value="2"/>
+          <span class="minutes"> Pomodoros</span>
+          <span class="note"> </span>
+        </div>
 
-      <div id="timeblock_red" class="timeblock">
-        <label for="timeblock_red">
-          <span data-i18n-caps>Red Mode</span>:
-        </label>
-        <input id="red-block" type="text" size="2" value="5"/>
-        <span class="minutes"> Pomodoros</span>
-        <span class="note"> </span>
-      </div>
+        <div id="timeblock_red" class="timeblock">
+          <label for="timeblock_red">
+            <span data-i18n-caps>Red Mode</span>:
+          </label>
+          <input id="red-block" type="text" size="2" value="5"/>
+          <span class="minutes"> Pomodoros</span>
+          <span class="note"> </span>
+        </div>
 
-      <div id="timeblock_black" class="timeblock">
-        <label for="timeblock_black" >
-          <span data-i18n-caps>Black Mode</span>:
-        </label>
-        <input id="black-block" type="text" size="2" value="10"/>
-        <span class="minutes"> Pomodoros</span>
-        <span class="note"> </span>
+        <div id="timeblock_black" class="timeblock">
+          <label for="timeblock_black" >
+            <span data-i18n-caps>Black Mode</span>:
+          </label>
+          <input id="black-block" type="text" size="2" value="10"/>
+          <span class="minutes"> Pomodoros</span>
+          <span class="note"> </span>
+        </div>
       </div>
-     </div>
-    <button type="button" id="save-button" data-i18n="options_save_changes"></button>
-    <div class="note" data-i18n="options_info_save"> </div>
-  </form>
+      <button type="button" id="save-button" data-i18n="options_save_changes"></button>
+      <div class="note" data-i18n="options_info_save"> </div>
+    </form>
 
-</div>
+  </div>
   <script type="text/javascript" src="jquery-2.1.3.min.js"></script>
   <script type="text/javascript" src="jquery-ui-1.11.3.custom/jquery-ui.min.js"></script>
   <script type="text/javascript" src="options.js"></script>
