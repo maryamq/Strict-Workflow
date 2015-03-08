@@ -166,7 +166,7 @@ startPomodoro = function(elemId, numBlocks) {
     return;
   }
   stateMap.selectedElemId = elemId;
-  settings = pomodoro.prefs.getPrefs();
+  settings = pomodoro.prefs.getPrefs(); // refresh settings
   stateMap.numBlocksRequested = numBlocks
   stateMap.numPomodoros = 0;
   stateMap.lastUpdateMinsRemaining = 0;
@@ -176,7 +176,6 @@ startPomodoro = function(elemId, numBlocks) {
     executeInAllBlockedTabs(true);
     startTimer();
   };
-
 
   startTimer = function() {
     stateMap.isRunning = true;
@@ -394,6 +393,5 @@ pomodoro.timer = (function () {
     getTimeRemaining: getTimeRemaining
   };
 }());
-
 
 pomodoro.main.initialize();

@@ -109,5 +109,9 @@
   "timer_all_done": {
     "message": "All done :)",
     "description": "Bold header of pop-up notification when a timer ends"
-  }
+  },
+  "options_info_save": {
+    "message": "Note: If pomodoro is active, your changes will effect after the timer stop running.",
+    "description": "Options save info"
+  }  
 }
