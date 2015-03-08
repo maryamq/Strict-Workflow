@@ -58,7 +58,10 @@
 
   startPomodoro = function(event) {
     var $elem = $(this);
-    mainPomodoro.startPomodoro($elem.attr("id"), event.data.pomoCount);
+    var success = mainPomodoro.startPomodoro($elem.attr("id"), event.data.pomoCount);
+    if (success) {
+      $elem.addClass('selected');
+    }
   };
 
  return { initModule : initModule };

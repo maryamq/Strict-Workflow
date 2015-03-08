@@ -162,20 +162,21 @@ getStateMap = function() {
 };
 
 startPomodoro = function(elemId, numBlocks) {
-  if (stateMap.isRunning) {
-    return;
-  }
-  stateMap.selectedElemId = elemId;
-  settings = pomodoro.prefs.getPrefs(); // refresh settings
-  stateMap.numBlocksRequested = numBlocks
-  stateMap.numPomodoros = 0;
-  stateMap.lastUpdateMinsRemaining = 0;
-  pomodoro.timer.initialize(callbackMap, settings.durations);
-  chrome.tabs.onUpdated.addListener(chromeBlockedTabListener);
+    if (stateMap.isRunning) {
+      return false;
+    }
+    stateMap.selectedElemId = elemId;
+    settings = pomodoro.prefs.getPrefs(); // refresh settings
+    stateMap.numBlocksRequested = numBlocks
+    stateMap.numPomodoros = 0;
+    stateMap.lastUpdateMinsRemaining = 0;
+    pomodoro.timer.initialize(callbackMap, settings.durations);
+    chrome.tabs.onUpdated.addListener(chromeBlockedTabListener);
     // Call this to block currently opened windows.
     executeInAllBlockedTabs(true);
     startTimer();
-  };
+    return true;
+ };
 
   startTimer = function() {
     stateMap.isRunning = true;
