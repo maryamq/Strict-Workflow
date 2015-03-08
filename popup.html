@@ -16,26 +16,37 @@
   }
   ul {
     list-style-type: none;
-    padding: 5px;
+    padding: 0px;
     margin:0px;
   }
   ul li {
     line-height: 25px;
     text-align: center;
+    border: 1px solid #ddd;
+    margin:1px;
+    background-color: #eee url("images/ui-bg_highlight-soft_100_eeeeee_1x100.png") 50% top repeat-x;
+    color: #1c94c4;
   }
 
   ul li:hover {
     cursor: pointer;
+    color:#F6A80E;
+  }
+  ul li.selected:hover {
+    color: #fff;
+  }
+
+  ul li.selected {
+    background:#F6A80E url("images/ui-bg_gloss-wave_35_f6a828_500x100.png") 50% 50% repeat-x;
   }
   </style>
 </head>
 <body>
  <ul id="popup">
   <li class="popup-start-single">Single Sprint</li>
-  <li class="popup-blue">Blue Block</li>
-  <li class="popup-red">Red Block</li>
-  <li class="popup-black">Black Block</li>
-  <li class="popup-info">Info</li>
+  <li id="popup-blue">Blue Block</li>
+  <li id="popup-red">Red Block</li>
+  <li id="popup-black">Black Block</li>
 </body>
 <script type="text/javascript" src="jquery-2.1.3.min.js"></script>
 <script src="popup.js"></script>

@@ -21,7 +21,7 @@ var options = (function() {
       $blueBlock: $container.find("#timeblock_blue input"),
       $blackBlock: $container.find("#timeblock_black input"),
       $save: $container.find("#save-button"),
-      $statusMessage: $container.find("#status-message"),
+      $statusMessage: $container.find("#status-message")
     };
 
     //  Translate every spans that needs it.

@@ -144,9 +144,10 @@ stateMap = {
   numPomodoros : 0,
   numBlocksRequested : 1,
   lastUpdateMinsRemaining: 0,
-  isRunning: false
+  isRunning: false,
+  selectedElemId: null,
 },
-initialize, 
+initialize, getStateMap, clearState,
 executeInTabIfBlocked, executeInAllBlockedTabs, isLocationMatched, parseLocation, isLocationBlocked, chromeBlockedTabListener,
 startPomodoro, startTimer, timerTickCallback, startTimerCallback, endTimerCallback, breakStartCallback;
 
@@ -156,10 +157,15 @@ initialize = function() {
   {onStart: startTimerCallback, onBreakStart: breakStartCallback, onEnd: endTimerCallback, onTick: timerTickCallback};
 };
 
-startPomodoro = function(numBlocks) {
+getStateMap = function() {
+  return stateMap; // not save. use $.extend
+};
+
+startPomodoro = function(elemId, numBlocks) {
   if (stateMap.isRunning) {
     return;
   }
+  stateMap.selectedElemId = elemId;
   settings = pomodoro.prefs.getPrefs();
   stateMap.numBlocksRequested = numBlocks
   stateMap.numPomodoros = 0;
@@ -216,9 +222,17 @@ startPomodoro = function(numBlocks) {
       chrome.browserAction.setBadgeBackgroundColor({color: settings.badgeBgColor.play});
       chrome.browserAction.setBadgeText ( { text: "done" } );
       chrome.tabs.onUpdated.removeListener(chromeBlockedTabListener);
-      stateMap.isRunning = false;
       pomodoro.utils.notifyUser("timer_all_done");
+      clearState();
     }
+  };
+
+  clearState = function() {
+    stateMap.isRunning = false;
+    stateMap.timeRemaining = 0;
+    stateMap.numPomodoros = 0;
+    stateMap.selectedElemId = null;
+    stateMap.numBlocksRequested = 0;
   };
 
   parseLocation = function (location) {
@@ -289,7 +303,8 @@ startPomodoro = function(numBlocks) {
 
   return {
     initialize: initialize,
-    startPomodoro: startPomodoro
+    startPomodoro: startPomodoro,
+    getStateMap: getStateMap
   }
 
 }());
