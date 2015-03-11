@@ -64,8 +64,8 @@ pomodoro.prefs = (function() {
       ],
       whitelist: [],
       durations: { // in seconds
-        work: 2,
-        play: 2
+        work: 1500,
+        play: 300
       },
       badgeBgColor : {
         work: [192, 0, 0, 255],

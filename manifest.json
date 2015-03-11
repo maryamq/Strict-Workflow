@@ -14,7 +14,7 @@
       "48": "icons/icon48.png"
    },
    "manifest_version": 2,
-   "name": "MyNotification",
+   "name": "WorkMode",
    "options_page": "options.html",
    "permissions": [ "notifications", "tabs", "<all_urls>" ],
    "version": "1.6.2",
